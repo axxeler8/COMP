@@ -129,6 +129,13 @@
                             <mainClass>com.empresa.test.DataIntegrityTest</mainClass>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>run-despacho</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.despacho.ConsolaDespacho</mainClass>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

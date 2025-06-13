@@ -1,0 +1,15 @@
+package com.empresa.despacho.dto;
+
+public class TarifaRequest {
+    public int codigoCiudadOrigen;
+    public int codigoCiudadDestino;
+    public int codigoAgenciaDestino = 0;
+    public int codigoAgenciaOrigen = 0;
+    public double alto;
+    public double ancho;
+    public double largo;
+    public double kilos;
+    public String cuentaCorriente = "";
+    public String cuentaCorrienteDV = "";
+    public String rutCliente = "1";
+}

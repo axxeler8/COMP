@@ -1,0 +1,1411 @@
+db.sql:
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+CREATE SCHEMA IF NOT EXISTS `bd_lyl` DEFAULT CHARACTER SET utf8 ;
+USE `bd_lyl` ;
+
+CREATE TABLE IF NOT EXISTS `bd_lyl`.`ubicaciones` (
+  `idUbicacion` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(45) NOT NULL,
+  `direccion` VARCHAR(45) NOT NULL,
+  `capacidad` INT NULL,
+  PRIMARY KEY (`idUbicacion`),
+  UNIQUE INDEX `idUbicacion_UNIQUE` (`idUbicacion` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `bd_lyl`.`repuestos` (
+  `idRepuesto` INT NOT NULL AUTO_INCREMENT,
+  `idUbicacion` INT NOT NULL,
+  `sku` INT NOT NULL,
+  `cantidad` INT NOT NULL,
+  `precio` INT NOT NULL,
+  `categoria` VARCHAR(45) NULL,
+  `disponible` ENUM('1', '0') NOT NULL,
+  `nombre` VARCHAR(60) NOT NULL,
+  PRIMARY KEY (`idRepuesto`),
+  UNIQUE INDEX `idProducto_UNIQUE` (`idRepuesto` ASC) VISIBLE,
+  UNIQUE INDEX `sku_UNIQUE` (`sku` ASC) VISIBLE,
+  INDEX `idUbicacion_idx` (`idUbicacion` ASC) VISIBLE,
+  CONSTRAINT `fk_repuestos_ubicacion`  -- Changed constraint name
+    FOREIGN KEY (`idUbicacion`)
+    REFERENCES `bd_lyl`.`ubicaciones` (`idUbicacion`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS `bd_lyl`.`vehiculos` (
+  `idVehiculo` INT NOT NULL AUTO_INCREMENT,
+  `anio` INT NULL,
+  `idUbicacion` INT NOT NULL,
+  `nombre` VARCHAR(45) NOT NULL,
+  `modelo` VARCHAR(45) NOT NULL,
+  `cilindraje` VARCHAR(45) NULL,
+  PRIMARY KEY (`idVehiculo`),
+  UNIQUE INDEX `idvehiculo_UNIQUE` (`idVehiculo` ASC) VISIBLE,
+  INDEX `idUbicacion_idx` (`idUbicacion` ASC) VISIBLE,
+  CONSTRAINT `fk_vehiculos_ubicacion`  -- Changed constraint name
+    FOREIGN KEY (`idUbicacion`)
+    REFERENCES `bd_lyl`.`ubicaciones` (`idUbicacion`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `bd_lyl`.`reservas` (
+  `idReserva` INT NOT NULL AUTO_INCREMENT,
+  `idVehiculo` INT NOT NULL,
+  `sku` INT NOT NULL,
+  `cantidad` INT NOT NULL,
+  `fecha` DATETIME NULL,
+  PRIMARY KEY (`idReserva`),
+  UNIQUE INDEX `idReserva_UNIQUE` (`idReserva` ASC) VISIBLE,
+  INDEX `idVehiculo_idx` (`idVehiculo` ASC) VISIBLE,
+  INDEX `sku_idx` (`sku` ASC) VISIBLE,
+  CONSTRAINT `idVehiculo`
+    FOREIGN KEY (`idVehiculo`)
+    REFERENCES `bd_lyl`.`vehiculos` (`idVehiculo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `sku`
+    FOREIGN KEY (`sku`)
+    REFERENCES `bd_lyl`.`repuestos` (`sku`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+pom.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.empresa</groupId>
+    <artifactId>inventario-paralela</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.boot.version>2.7.5</spring.boot.version>
+        <jackson.version>2.13.4</jackson.version>
+    </properties>
+
+    <dependencies>
+        <!-- Spring Boot Web (REST Controller) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <!-- Spring Boot Data JPA (Database) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <!-- MySQL Connector -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.0.33</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Jackson (JSON Serialization) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- RMI (Java Native) -->
+        <dependency>
+            <groupId>javax.xml</groupId>
+            <artifactId>jaxrpc-api</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <!-- Lombok (Optional) -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.28</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JAXB (Java 11+ Compatibility) -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.3</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Exec Maven Plugin (Para ejecutar diferentes módulos) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <!-- Servidor Principal -->
+                    <execution>
+                        <id>run-main-server</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.server.ServerMain</mainClass>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Servidor de Respaldo -->
+                    <execution>
+                        <id>run-backup-server</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.server.ServerBackup</mainClass>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Cliente -->
+                    <execution>
+                        <id>run-taller</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.taller.ConsolaTaller</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>run-test</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.test.DataIntegrityTest</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+application.properties:
+spring.datasource.url=jdbc:mysql://localhost:3306/bd_lyl?serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=axeler8
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+application.java:
+package com.empresa.backend;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+database.java:
+package com.empresa.backend;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.empresa.server.Repuesto;
+import com.empresa.server.Reserva;
+import com.empresa.server.Ubicacion;
+import com.empresa.server.Vehiculo;
+
+public class Database {
+    private static final String URL  = "jdbc:mysql://localhost:3306/bd_lyl?serverTimezone=UTC";
+    private static final String USER = "root";
+    private static final String PASS = "axeler8";
+
+    static {
+        try { Class.forName("com.mysql.cj.jdbc.Driver"); }
+        catch (Exception e) { throw new RuntimeException(e); }
+    }
+
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASS);
+    }
+
+    public static List<Repuesto> obtenerTodosRepuestos() {
+        String sql = "SELECT sku, nombre, cantidad, precio, categoria, disponible FROM repuestos";
+        List<Repuesto> list = new ArrayList<>();
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String cat  = rs.getString("categoria");
+                boolean disp = "1".equals(rs.getString("disponible"));
+                list.add(new Repuesto(
+                    rs.getInt("sku"),
+                    rs.getString("nombre"),
+                    rs.getInt("cantidad"),
+                    rs.getInt("precio"),
+                    cat,
+                    disp
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public static Repuesto obtenerRepuestoPorSku(int sku) {
+        String sql = "SELECT sku, nombre, cantidad, precio, categoria, disponible FROM repuestos WHERE sku = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, sku);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String cat  = rs.getString("categoria");
+                    boolean disp = "1".equals(rs.getString("disponible"));
+                    return new Repuesto(
+                        rs.getInt("sku"),
+                        rs.getString("nombre"),
+                        rs.getInt("cantidad"),
+                        rs.getInt("precio"),
+                        cat,
+                        disp
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void insertarRepuesto(int idUbicacion, int sku, int cantidad, int precio, String categoria, boolean disponible, String nombre) {
+        String sql = "INSERT INTO repuestos(idUbicacion, sku, cantidad, precio, categoria, disponible, nombre) VALUES(?,?,?,?,?,?,?)";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, idUbicacion);
+            ps.setInt(2, sku);
+            ps.setInt(3, cantidad);
+            ps.setInt(4, precio);
+            ps.setString(5, categoria);
+            ps.setString(6, disponible ? "1" : "0");
+            ps.setString(7, nombre);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void actualizarStock(int idUbicacion, int sku, int delta) {
+        String sql = "UPDATE repuestos SET cantidad = cantidad + ? WHERE idUbicacion = ? AND sku = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, delta);
+            ps.setInt(2, idUbicacion);
+            ps.setInt(3, sku);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Reserva> obtenerTodasReservas() {
+        String sql = "SELECT idReserva, idVehiculo, sku, cantidad FROM reservas";
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(new Reserva(
+                    rs.getInt("idReserva"),
+                    rs.getInt("idVehiculo"),
+                    rs.getInt("sku"),
+                    rs.getInt("cantidad")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public static Reserva obtenerReservaPorId(int idReserva) {
+        String sql = "SELECT idReserva, idVehiculo, sku, cantidad FROM reservas WHERE idReserva = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, idReserva);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Reserva(
+                        rs.getInt("idReserva"),
+                        rs.getInt("idVehiculo"),
+                        rs.getInt("sku"),
+                        rs.getInt("cantidad")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void insertarReserva(int idVehiculo, int sku, int cantidad) {
+        String sql = "INSERT INTO reservas(idVehiculo, sku, cantidad, fecha) VALUES(?,?,?,NOW())";
+        try (Connection c = getConnection()) {
+            
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setInt(1, idVehiculo);
+                ps.setInt(2, sku);
+                ps.setInt(3, cantidad);
+                ps.executeUpdate();
+            }
+            
+            int idUbicacion;
+            String selUb = "SELECT idUbicacion FROM repuestos WHERE sku = ?";
+            try (PreparedStatement ps2 = c.prepareStatement(selUb)) {
+                ps2.setInt(1, sku);
+                try (ResultSet rs = ps2.executeQuery()) {
+                    if (!rs.next()) return;
+                    idUbicacion = rs.getInt("idUbicacion");
+                }
+            }
+          
+            actualizarStock(idUbicacion, sku, -cantidad);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void eliminarReserva(int idReserva) {
+        try (Connection c = getConnection()) {
+            
+            String sel = "SELECT sku, cantidad FROM reservas WHERE idReserva = ?";
+            int sku, cantidad;
+            try (PreparedStatement ps = c.prepareStatement(sel)) {
+                ps.setInt(1, idReserva);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) return; 
+                    sku = rs.getInt("sku");
+                    cantidad = rs.getInt("cantidad");
+                }
+            }
+
+           
+            String selUb = "SELECT idUbicacion FROM repuestos WHERE sku = ?";
+            int idUbicacion;
+            try (PreparedStatement ps2 = c.prepareStatement(selUb)) {
+                ps2.setInt(1, sku);
+                try (ResultSet rs2 = ps2.executeQuery()) {
+                    if (!rs2.next()) return; 
+                    idUbicacion = rs2.getInt("idUbicacion");
+                }
+            }
+
+            
+            actualizarStock(idUbicacion, sku, cantidad);
+
+           
+            String del = "DELETE FROM reservas WHERE idReserva = ?";
+            try (PreparedStatement ps3 = c.prepareStatement(del)) {
+                ps3.setInt(1, idReserva);
+                ps3.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static int obtenerStockTotalPorUbicacion(int idUbicacion) {
+        String sql = "SELECT COALESCE(SUM(cantidad),0) AS total FROM repuestos WHERE idUbicacion = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, idUbicacion);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static Ubicacion obtenerUbicacionPorId(int id) {
+        String sql = "SELECT idUbicacion, nombre, direccion, capacidad FROM ubicaciones WHERE idUbicacion = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Ubicacion(
+                        rs.getInt("idUbicacion"),
+                        rs.getString("nombre"),
+                        rs.getString("direccion"),
+                        rs.getInt("capacidad")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Vehiculo obtenerVehiculoPorId(int id) {
+        String sql = "SELECT idVehiculo, anio, idUbicacion, nombre, modelo, cilindraje, color FROM vehiculos WHERE idVehiculo = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Vehiculo(
+                        rs.getInt("idVehiculo"),
+                        rs.getInt("anio"),
+                        rs.getInt("idUbicacion"),
+                        rs.getString("nombre"),
+                        rs.getString("modelo"),
+                        rs.getString("cilindraje"),
+                        rs.getString("color")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Repuesto obtenerRepuestoPorUbicacion(int idUbicacion, int sku) {
+        String sql = "SELECT sku, nombre, cantidad, precio, categoria, disponible FROM repuestos WHERE idUbicacion = ? AND sku = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, idUbicacion);
+            ps.setInt(2, sku);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String cat  = rs.getString("categoria");
+                    boolean disp = "1".equals(rs.getString("disponible"));
+                    return new Repuesto(
+                        rs.getInt("sku"),
+                        rs.getString("nombre"),
+                        rs.getInt("cantidad"),
+                        rs.getInt("precio"),
+                        cat,
+                        disp
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+inventariocontroller.java:
+package com.empresa.backend;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.empresa.server.*;
+
+import java.util.List;
+
+
+
+@RestController
+@RequestMapping("/api/inventario")
+public class InventarioController {
+
+    @GetMapping(value = "/repuestos/{sku}", params = "ubicacion")
+    public ResponseEntity<Repuesto> obtenerRepuestoEnUbicacion(
+            @PathVariable int sku,
+            @RequestParam("ubicacion") int idUbicacion) {
+
+        Repuesto rep = Database.obtenerRepuestoPorUbicacion(idUbicacion, sku);
+        if (rep == null) {
+            throw new ResourceNotFoundException(String.format(
+                "No existe el repuesto SKU %d en la ubicación %d", sku, idUbicacion));
+        }
+        return ResponseEntity.ok(rep);
+    }
+    // Repuestos
+    @GetMapping("/repuestos")
+    public List<Repuesto> obtenerTodosRepuestos() {
+        return Database.obtenerTodosRepuestos();
+    }
+    @GetMapping("/reservas/{idReserva}")
+    public ResponseEntity<Reserva> obtenerReservaPorId(@PathVariable int idReserva) {
+        Reserva r = Database.obtenerReservaPorId(idReserva);
+        if (r == null) {
+            throw new ResourceNotFoundException("Reserva no encontrada");
+        }
+        return ResponseEntity.ok(r);
+    }
+
+    @GetMapping("/repuestos/{sku}")
+    public Repuesto obtenerRepuestoPorSku(@PathVariable int sku) {
+        Repuesto repuesto = Database.obtenerRepuestoPorSku(sku);
+        if(repuesto == null) throw new ResourceNotFoundException("Repuesto no encontrado");
+        return repuesto;
+    }
+
+    @PostMapping("/repuestos")
+    public void crearRepuesto(@RequestBody RepuestoRequest request) {
+        Database.insertarRepuesto(
+            request.getIdUbicacion(),
+            request.getSku(),
+            request.getCantidad(),
+            request.getPrecio(),
+            request.getCategoria(),
+            request.isDisponible(),
+            request.getNombre()
+        );
+    }
+
+    // Reservas
+    @GetMapping("/reservas")
+    public List<Reserva> obtenerTodasReservas() {
+        return Database.obtenerTodasReservas();
+    }
+
+    @PostMapping("/reservas")
+    public void crearReserva(@RequestBody ReservaRequest request) {
+        Database.insertarReserva(
+            request.getIdVehiculo(),
+            request.getSku(),
+            request.getCantidad()
+        );
+    }
+
+    // Ubicaciones
+    @GetMapping("/ubicaciones/{id}/stock")
+    public int consultarStockUbicacion(@PathVariable int id) {
+        return Database.obtenerStockTotalPorUbicacion(id);
+    }
+    // En com.empresa.backend.InventarioController
+
+    // Obtener los datos completos de una ubicación
+    @GetMapping("/ubicaciones/{id}")
+    public ResponseEntity<Ubicacion> obtenerUbicacionPorId(@PathVariable int id) {
+        Ubicacion ub = Database.obtenerUbicacionPorId(id);
+        if (ub == null) {
+            throw new ResourceNotFoundException("Ubicación no encontrada");
+        }
+        return ResponseEntity.ok(ub);
+    }
+
+    // Vehículos
+    @GetMapping("/vehiculos/{id}")
+    public Vehiculo obtenerVehiculo(@PathVariable int id) {
+        Vehiculo vehiculo = Database.obtenerVehiculoPorId(id);
+        if(vehiculo == null) throw new ResourceNotFoundException("Vehículo no encontrado");
+        return vehiculo;
+    }
+
+    @PutMapping("/repuestos/{idUbicacion}/{sku}/liberar")
+    public ResponseEntity<Void> liberarRepuesto(
+            @PathVariable int idUbicacion,
+            @PathVariable int sku,
+            @RequestParam int cantidad) {
+        Database.actualizarStock(idUbicacion, sku, -cantidad);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Eliminar (liberar) reserva
+    @DeleteMapping("/reservas/{idReserva}")
+    public ResponseEntity<Void> eliminarReserva(@PathVariable int idReserva) {
+        Database.eliminarReserva(idReserva);
+        return ResponseEntity.noContent().build();
+    }
+
+    public static class RepuestoRequest {
+        private int idUbicacion;
+        private int sku;
+        private int cantidad;
+        private int precio;
+        private String categoria;
+        private boolean disponible;
+        private String nombre;
+
+        
+        public int getIdUbicacion() { return idUbicacion; }
+        public void setIdUbicacion(int idUbicacion) { this.idUbicacion = idUbicacion; }
+
+        public int getSku() { return sku; }
+        public void setSku(int sku) { this.sku = sku; }
+
+        public int getCantidad() { return cantidad; }
+        public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+
+        public int getPrecio() { return precio; }
+        public void setPrecio(int precio) { this.precio = precio; }
+
+        public String getCategoria() { return categoria; }
+        public void setCategoria(String categoria) { this.categoria = categoria; }
+
+        public boolean isDisponible() { return disponible; }
+        public void setDisponible(boolean disponible) { this.disponible = disponible; }
+
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+    }
+
+    public static class ReservaRequest {
+        private int idVehiculo;
+        private int sku;
+        private int cantidad;
+
+        
+        public int getIdVehiculo() { return idVehiculo; }
+        public void setIdVehiculo(int idVehiculo) { this.idVehiculo = idVehiculo; }
+
+        public int getSku() { return sku; }
+        public void setSku(int sku) { this.sku = sku; }
+
+        public int getCantidad() { return cantidad; }
+        public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    }
+
+    
+    @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "Recurso no encontrado")
+    public static class ResourceNotFoundException extends RuntimeException {
+        public ResourceNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Error: " + ex.getMessage());
+    }
+}
+inventarioservice.java:
+// src/main/java/com/empresa/server/InventarioService.java
+package com.empresa.server;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.List;
+
+public interface InventarioService extends Remote {
+    // Método de heartbeat para comprobar que el servidor está vivo
+    void heartbeat() throws RemoteException;
+
+    List<Repuesto> verRepuestos() throws RemoteException;
+    Repuesto consultarRepuesto(int sku) throws RemoteException;
+    void agregarRepuesto(int idUbicacion, int sku, int cantidad, int precio, String categoria, boolean disponible, String nombre) throws RemoteException;
+    void liberarRepuesto(int idUbicacion, int sku, int cantidad) throws RemoteException;
+
+    List<Reserva> verReservas() throws RemoteException;
+    Reserva consultarReserva(int idReserva) throws RemoteException;
+    void agregarReserva(int idVehiculo, int sku, int cantidad) throws RemoteException;
+    void liberarReserva(int idReserva) throws RemoteException;
+
+    Ubicacion consultarUbicacion(int idUbicacion) throws RemoteException;
+    int consultarStockUbicacion(int idUbicacion) throws RemoteException;
+    Vehiculo consultarVehiculo(int idVehiculo) throws RemoteException;
+    Repuesto consultarRepuestoEnUbicacion(int idUbicacion, int sku) throws RemoteException;
+}
+inventarioserviceimpl.java:
+// src/main/java/com/empresa/server/InventarioServiceImpl.java
+package com.empresa.server;
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+
+public class InventarioServiceImpl extends UnicastRemoteObject implements InventarioService {
+
+    private final RestTemplate restTemplate;
+    private static final String BASE_URL = "http://localhost:8080/api/inventario";
+    private final Lock mutex = new ReentrantLock();
+
+    public InventarioServiceImpl() throws RemoteException {
+        super();
+        this.restTemplate = new RestTemplate();
+    }
+
+    // Interfaz funcional para operaciones con retorno
+    @FunctionalInterface
+    private interface OperationWithReturn<T> {
+        T execute() throws RemoteException;
+    }
+
+    // Interfaz funcional para operaciones sin retorno
+    @FunctionalInterface
+    private interface OperationWithoutReturn {
+        void execute() throws RemoteException;
+    }
+
+    private <T> T executeWithMutexReturn(OperationWithReturn<T> operation) throws RemoteException {
+        mutex.lock();
+        try {
+            return operation.execute();
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+    private void executeWithMutex(OperationWithoutReturn operation) throws RemoteException {
+        mutex.lock();
+        try {
+            operation.execute();
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+
+    @Override
+    public List<Repuesto> verRepuestos() throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.exchange(
+                    BASE_URL + "/repuestos",
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<Repuesto>>() {}
+                ).getBody();
+            } catch (Exception e) {
+                throw new RemoteException("Error al obtener repuestos: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public Repuesto consultarRepuesto(int sku) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.getForEntity(
+                    BASE_URL + "/repuestos/" + sku,
+                    Repuesto.class
+                ).getBody();
+            } catch (HttpClientErrorException.NotFound nf) {
+                return null;
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar repuesto: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void agregarRepuesto(int idUbicacion, int sku, int cantidad, 
+                                int precio, String categoria, boolean disponible, String nombre) throws RemoteException {
+        executeWithMutex(() -> {
+            try {
+                RepuestoRequest request = new RepuestoRequest();
+                request.idUbicacion = idUbicacion;
+                request.sku = sku;
+                request.cantidad = cantidad;
+                request.precio = precio;
+                request.categoria = categoria;
+                request.disponible = disponible;
+                request.nombre = nombre;
+                restTemplate.postForEntity(BASE_URL + "/repuestos", request, Void.class);
+            } catch (Exception e) {
+                throw new RemoteException("Error al crear repuesto: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void liberarRepuesto(int idUbicacion, int sku, int cantidad) throws RemoteException {
+        executeWithMutex(() -> {
+            try {
+                restTemplate.put(
+                    BASE_URL + "/repuestos/" + idUbicacion + "/" + sku + "/liberar?cantidad=" + cantidad,
+                    null
+                );
+            } catch (Exception e) {
+                throw new RemoteException("Error al liberar stock: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public List<Reserva> verReservas() throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.exchange(
+                    BASE_URL + "/reservas",
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<Reserva>>() {}
+                ).getBody();
+            } catch (Exception e) {
+                throw new RemoteException("Error al obtener reservas: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public Reserva consultarReserva(int idReserva) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.getForEntity(
+                    BASE_URL + "/reservas/" + idReserva,
+                    Reserva.class
+                ).getBody();
+            } catch (HttpClientErrorException.NotFound nf) {
+                return null;
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar reserva: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void agregarReserva(int idVehiculo, int sku, int cantidad) throws RemoteException {
+        executeWithMutex(() -> {
+            try {
+                ReservaRequest request = new ReservaRequest();
+                request.idVehiculo = idVehiculo;
+                request.sku = sku;
+                request.cantidad = cantidad;
+                restTemplate.postForEntity(BASE_URL + "/reservas", request, Void.class);
+            } catch (Exception e) {
+                throw new RemoteException("Error al crear reserva: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public void liberarReserva(int idReserva) throws RemoteException {
+        executeWithMutex(() -> {
+            try {
+                restTemplate.delete(BASE_URL + "/reservas/" + idReserva);
+            } catch (HttpClientErrorException.NotFound nf) {
+                throw new RemoteException("Reserva no encontrada.");
+            } catch (Exception e) {
+                throw new RemoteException("Error al liberar reserva: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public Ubicacion consultarUbicacion(int idUbicacion) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                ResponseEntity<Ubicacion> response = restTemplate.getForEntity(
+                    BASE_URL + "/ubicaciones/" + idUbicacion,
+                    Ubicacion.class
+                );
+                return response.getBody();
+            } catch (HttpClientErrorException.NotFound nf) {
+                return null;
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar ubicación: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public int consultarStockUbicacion(int idUbicacion) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                ResponseEntity<Integer> response = restTemplate.getForEntity(
+                    BASE_URL + "/ubicaciones/" + idUbicacion + "/stock",
+                    Integer.class
+                );
+                return response.getBody();
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar stock: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public Vehiculo consultarVehiculo(int idVehiculo) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                ResponseEntity<Vehiculo> response = restTemplate.getForEntity(
+                    BASE_URL + "/vehiculos/" + idVehiculo,
+                    Vehiculo.class
+                );
+                return response.getBody();
+            } catch (HttpClientErrorException.NotFound nf) {
+                return null;
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar vehículo: " + e.getMessage());
+            }
+        });
+    }
+
+    @Override
+    public Repuesto consultarRepuestoEnUbicacion(int idUbicacion, int sku) throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.getForEntity(
+                    BASE_URL + "/repuestos/" + sku + "?ubicacion=" + idUbicacion,
+                    Repuesto.class
+                ).getBody();
+            } catch (HttpClientErrorException.NotFound nf) {
+                return null;
+            } catch (Exception e) {
+                throw new RemoteException("Error al consultar repuesto en ubicación: " + e.getMessage());
+            }
+        });
+    }
+
+    public void heartbeat() throws RemoteException {
+        // Método de heartbeat para comprobar que el servidor está vivo
+        // No se requiere implementación específica, solo sirve para mantener la conexión activa
+    }
+
+    // Clases internas para los request bodies
+    private static class RepuestoRequest {
+        public int idUbicacion;
+        public int sku;
+        public int cantidad;
+        public int precio;
+        public String categoria;
+        public boolean disponible;
+        public String nombre;
+    }
+
+    private static class ReservaRequest {
+        public int idVehiculo;
+        public int sku;
+        public int cantidad;
+    }
+}
+serverbackup.java:
+package com.empresa.server;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class ServerBackup {
+    public static void main(String[] args) {
+        try {
+            Registry registry = LocateRegistry.createRegistry(1100);
+            InventarioService svc = new InventarioServiceImpl();
+            registry.rebind("InventarioService", svc);
+            System.out.println("Servidor RMI de respaldo iniciado en puerto 1100...");
+            System.out.println("Presione ENTER para apagar el servidor");
+            System.in.read();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+servermain.java:
+package com.empresa.server;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class ServerMain {
+    public static void main(String[] args) {
+        try {
+            Registry registry = LocateRegistry.createRegistry(1099);
+            InventarioService svc = new InventarioServiceImpl();
+            registry.rebind("InventarioService", svc);
+            System.out.println("Servidor RMI principal iniciado en puerto 1099...");
+            System.out.println("Presione ENTER para apagar el servidor");
+            System.in.read();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+consolataller.java:
+package com.empresa.taller;
+
+import com.empresa.server.InventarioService;
+import com.empresa.server.Repuesto;
+import com.empresa.server.Reserva;
+import com.empresa.server.Ubicacion;
+import com.empresa.server.Vehiculo;
+
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.List;
+import java.util.Scanner;
+
+public class ConsolaTaller {
+    private static InventarioService stub;
+    private final String host = "localhost";
+    private final int primaryPort = 1099;
+    private final int backupPort  = 1100;
+    private boolean connectedToPrimary = true;
+    private volatile boolean running = true;
+
+    public static void main(String[] args) {
+        try {
+            new ConsolaTaller().start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private void start() throws Exception {
+        conectarSvPrincipal();
+        startHeartbeat();
+        atenderConsola();
+    }
+
+    private void conectarSvPrincipal() throws Exception {
+        stub = establecerConexion(host, primaryPort, "InventarioService");
+        if (stub == null) {
+            System.out.println("No hay principal, intentando respaldo...");
+            cambiarSvRespaldo();
+        } else {
+            connectedToPrimary = true;
+            System.out.println("✔ Conectado al servidor principal.");
+        }
+        if (stub == null) {
+            throw new RemoteException("No se pudo conectar a ningún servidor.");
+        }
+    }
+
+    private void cambiarSvRespaldo() {
+        InventarioService backup = establecerConexion(host, backupPort, "InventarioService");
+        if (backup == null) {
+            System.err.println("No se pudo conectar al servidor de respaldo.");
+        } else {
+            stub = backup;
+            connectedToPrimary = false;
+            System.out.println("✔ Conectado al servidor de respaldo.");
+        }
+    }
+
+    private InventarioService establecerConexion(String host, int port, String bindingName) {
+        try {
+            Registry registry = LocateRegistry.getRegistry(host, port);
+            return (InventarioService) registry.lookup(bindingName);
+        } catch (Exception e) {
+            System.err.println("Fallo conectando a " + bindingName + " en " + port + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void startHeartbeat() {
+        Thread hb = new Thread(() -> {
+            while (running) {
+                try {
+                    Thread.sleep(1000);
+                    stub.heartbeat();
+                } catch (RemoteException e) {
+                    System.err.println("Heartbeat fallido (" + (connectedToPrimary ? "principal" : "respaldo") + ")");
+                    if (connectedToPrimary) {
+                        cambiarSvRespaldo();
+                    } else {
+                        System.err.println("Ambos servidores inaccesibles, deteniendo heartbeat.");
+                        System.exit(1); 
+                    }
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        hb.setDaemon(true);
+        hb.start();
+    }
+
+    private void atenderConsola() throws Exception {
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            System.out.println("\n--- Consola Taller ---");
+            System.out.println("1) Ver repuestos");
+            System.out.println("2) Consultar repuesto por SKU");
+            System.out.println("3) Agregar repuesto");
+            System.out.println("4) Liberar repuesto");
+            System.out.println("5) Ver reservas");
+            System.out.println("6) Consultar reserva por ID");
+            System.out.println("7) Agregar reserva");
+            System.out.println("8) Liberar reserva");
+            System.out.println("9) Salir");
+            int op = leerEntero(sc, "Selecciona una opción: ", 1, 9);
+
+            try {
+                switch (op) {
+                    case 1: mostrarRepuestos();           break;
+                    case 2: consultarRepuestoPorSku(sc);  break;
+                    case 3: agregarRepuesto(sc);          break;
+                    case 4: liberarRepuesto(sc);          break;
+                    case 5: mostrarReservas();            break;
+                    case 6: consultarReservaPorId(sc);    break;
+                    case 7: agregarReserva(sc);           break;
+                    case 8: liberarReserva(sc);           break;
+                    case 9: System.out.println("Saliendo..."); sc.close(); System.exit(0);
+                }
+            } catch (RemoteException e) {
+                System.err.println("Error en operación RMI: " + e.getMessage());
+                // Intentamos reconectar si viene de principal
+                if (connectedToPrimary) {
+                    cambiarSvRespaldo();
+                }
+            }
+        }
+    }
+
+    private static int leerEntero(Scanner sc, String prompt, int min, int max) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                int val = Integer.parseInt(sc.nextLine().trim());
+                if (val < min || val > max) {
+                    System.out.printf("⚠ Debe ser entre %d y %d.%n", min, max);
+                } else {
+                    return val;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("⚠ Formato inválido.");
+            }
+        }
+    }
+
+    private static int leerEntero(Scanner sc, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Integer.parseInt(sc.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("⚠ Formato inválido.");
+            }
+        }
+    }
+
+    // Métodos invocando stub en lugar de svc
+
+    private void mostrarRepuestos() throws RemoteException {
+        List<Repuesto> list = stub.verRepuestos();
+        System.out.println("\n-- Lista de Repuestos --");
+        list.forEach(r ->
+            System.out.printf("[SKU %d] %s | Cant: %d | Precio: %d | Cat: %s | Disp: %b%n",
+                r.getSku(), r.getNombre(), r.getCantidad(), r.getPrecio(), r.getCategoria(), r.isDisponible())
+        );
+    }
+
+    private void consultarRepuestoPorSku(Scanner sc) throws RemoteException {
+        Repuesto r;
+        do {
+            int sku = leerEntero(sc, "\nSKU: ");
+            r = stub.consultarRepuesto(sku);
+            if (r == null) System.out.println("No existe ese SKU.");
+        } while (r == null);
+        System.out.printf("Detalles: SKU=%d, Nombre=%s, Cant=%d, Precio=%d, Cat=%s, Disp=%b%n",
+            r.getSku(), r.getNombre(), r.getCantidad(), r.getPrecio(), r.getCategoria(), r.isDisponible());
+    }
+
+    private void agregarRepuesto(Scanner sc) throws RemoteException {
+        System.out.println("\n-- Agregar Repuesto --");
+        int idUb;
+        while (true) {
+            idUb = leerEntero(sc, "ID de Ubicación: ");
+            if (stub.consultarUbicacion(idUb) == null) {
+                System.out.println("⚠ Ubicación inexistente.");
+            } else break;
+        }
+        Ubicacion ub = stub.consultarUbicacion(idUb);
+
+        int sku;
+        do {
+            sku = leerEntero(sc, "SKU: ");
+            if (stub.consultarRepuesto(sku) != null)
+                System.out.println("⚠ SKU ya existe.");
+            else break;
+        } while (true);
+
+        int cantidad;
+        do {
+            cantidad = leerEntero(sc, "Cantidad: ");
+            int stock = stub.consultarStockUbicacion(idUb);
+            if (cantidad < 1)
+                System.out.println("⚠ Mínimo 1.");
+            else if (stock + cantidad > ub.getCapacidad())
+                System.out.printf("⚠ Excede capacidad (%d/%d).%n", stock, ub.getCapacidad());
+            else break;
+        } while (true);
+
+        int precio;
+        do {
+            precio = leerEntero(sc, "Precio: ");
+            if (precio < 0) System.out.println("⚠ No negativo.");
+            else break;
+        } while (true);
+
+        System.out.print("Categoría: ");
+        String categoria = sc.nextLine().trim();
+        boolean disponible = leerEntero(sc, "Disponible (1=si/0=no): ", 0, 1) == 1;
+        System.out.print("Nombre: ");
+        String nombre = sc.nextLine().trim();
+
+        stub.agregarRepuesto(idUb, sku, cantidad, precio, categoria, disponible, nombre);
+        System.out.println("✔ Repuesto agregado.");
+    }
+
+    private void liberarRepuesto(Scanner sc) throws RemoteException {
+        System.out.println("\n-- Liberar Repuesto --");
+        int idUb;
+        do {
+            idUb = leerEntero(sc, "ID de Ubicación: ");
+            if (stub.consultarUbicacion(idUb) == null)
+                System.out.println("⚠ Ubicación inexistente.");
+            else break;
+        } while (true);
+
+        Repuesto rep;
+        int sku;
+        do {
+            sku = leerEntero(sc, "SKU: ");
+            rep = stub.consultarRepuestoEnUbicacion(idUb, sku);
+            if (rep == null)
+                System.out.println("⚠ SKU no existe en ubicación.");
+            else break;
+        } while (true);
+
+        int cantidad;
+        do {
+            cantidad = leerEntero(sc, String.format("Cantidad a liberar (máx %d): ", rep.getCantidad()));
+            if (cantidad < 1 || cantidad > rep.getCantidad())
+                System.out.println("⚠ Fuera de rango.");
+            else {
+                stub.liberarRepuesto(idUb, sku, cantidad);
+                System.out.println("✔ Liberado.");
+                break;
+            }
+        } while (true);
+    }
+
+    private void mostrarReservas() throws RemoteException {
+        List<Reserva> lista = stub.verReservas();
+        System.out.println("\n-- Lista de Reservas --");
+        lista.forEach(r ->
+            System.out.printf("[Res %d] Vehículo=%d | SKU=%d | Cant=%d%n",
+                r.getIdReserva(), r.getIdVehiculo(), r.getSku(), r.getCantidad())
+        );
+    }
+
+    private void consultarReservaPorId(Scanner sc) throws RemoteException {
+        Reserva r;
+        do {
+            int id = leerEntero(sc, "\nID Reserva: ");
+            r = stub.consultarReserva(id);
+            if (r == null) System.out.println("No existe.");
+        } while (r == null);
+        System.out.printf("Res %d: Veh=%d, SKU=%d, Cant=%d%n",
+            r.getIdReserva(), r.getIdVehiculo(), r.getSku(), r.getCantidad());
+    }
+
+    private void agregarReserva(Scanner sc) throws RemoteException {
+        System.out.println("\n-- Agregar Reserva --");
+        int idVeh;
+        do {
+            idVeh = leerEntero(sc, "ID Vehículo: ");
+            if (stub.consultarVehiculo(idVeh) == null)
+                System.out.println("⚠ Vehículo no encontrado.");
+            else break;
+        } while (true);
+
+        Repuesto rep;
+        int sku;
+        do {
+            sku = leerEntero(sc, "SKU: ");
+            rep = stub.consultarRepuesto(sku);
+            if (rep == null) System.out.println("⚠ SKU no existe.");
+            else if (rep.getCantidad() < 1) {
+                System.out.println("⚠ Sin stock."); return;
+            } else break;
+        } while (true);
+
+        int cantidad;
+        do {
+            cantidad = leerEntero(sc, String.format("Cantidad (máx %d): ", rep.getCantidad()));
+            if (cantidad < 1 || cantidad > rep.getCantidad())
+                System.out.println("⚠ Fuera de rango.");
+            else break;
+        } while (true);
+
+        stub.agregarReserva(idVeh, sku, cantidad);
+        System.out.println("✔ Reserva creada.");
+    }
+
+    private void liberarReserva(Scanner sc) throws RemoteException {
+        System.out.println("\n-- Liberar Reserva --");
+        int idRes;
+        do {
+            idRes = leerEntero(sc, "ID Reserva: ");
+            if (idRes < 0) System.out.println("⚠ No negativo.");
+            else if (stub.consultarReserva(idRes) == null)
+                System.out.println("⚠ No existe.");
+            else break;
+        } while (true);
+
+        stub.liberarReserva(idRes);
+        System.out.println("✔ Reserva liberada.");
+    }
+}

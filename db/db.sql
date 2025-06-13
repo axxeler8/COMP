@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS `bd_lyl`.`vehiculos` (
   `nombre` VARCHAR(45) NOT NULL,
   `modelo` VARCHAR(45) NOT NULL,
   `cilindraje` VARCHAR(45) NULL,
-  `color` VARCHAR(45) NULL,
   PRIMARY KEY (`idVehiculo`),
   UNIQUE INDEX `idvehiculo_UNIQUE` (`idVehiculo` ASC) VISIBLE,
   INDEX `idUbicacion_idx` (`idUbicacion` ASC) VISIBLE,

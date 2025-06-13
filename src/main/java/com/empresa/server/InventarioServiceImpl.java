@@ -54,6 +54,21 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
         }
     }
 
+    @Override
+    public List<Ubicacion> verUbicaciones() throws RemoteException {
+        return executeWithMutexReturn(() -> {
+            try {
+                return restTemplate.exchange(
+                    BASE_URL + "/ubicaciones",
+                    HttpMethod.GET,
+                    null,
+                    new org.springframework.core.ParameterizedTypeReference<List<Ubicacion>>() {}
+                ).getBody();
+            } catch (Exception e) {
+                throw new RemoteException("Error al obtener ubicaciones: " + e.getMessage());
+            }
+        });
+    }
 
     @Override
     public List<Repuesto> verRepuestos() throws RemoteException {

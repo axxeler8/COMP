@@ -23,4 +23,7 @@ public interface InventarioService extends Remote {
     int consultarStockUbicacion(int idUbicacion) throws RemoteException;
     Vehiculo consultarVehiculo(int idVehiculo) throws RemoteException;
     Repuesto consultarRepuestoEnUbicacion(int idUbicacion, int sku) throws RemoteException;
+
+    List<Ubicacion> verUbicaciones() throws RemoteException;
+    
 }
