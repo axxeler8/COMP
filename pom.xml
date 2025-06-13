@@ -96,16 +96,25 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <executions>
-                    <!-- Servidor RMI -->
+                    <!-- Servidor Principal -->
                     <execution>
-                        <id>run-server</id>
+                        <id>run-main-server</id>
                         <goals><goal>java</goal></goals>
                         <configuration>
                             <mainClass>com.empresa.server.ServerMain</mainClass>
                         </configuration>
                     </execution>
-                                 
-                    <!-- Módulo Taller -->
+                    
+                    <!-- Servidor de Respaldo -->
+                    <execution>
+                        <id>run-backup-server</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.server.ServerBackup</mainClass>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Cliente -->
                     <execution>
                         <id>run-taller</id>
                         <goals><goal>java</goal></goals>
@@ -113,7 +122,25 @@
                             <mainClass>com.empresa.taller.ConsolaTaller</mainClass>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>run-test</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.empresa.test.DataIntegrityTest</mainClass>
+                        </configuration>
+                    </execution>
                 </executions>
+            </plugin>
+
+            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,5 +1,5 @@
 INSERT INTO ubicaciones (nombre, direccion, capacidad) VALUES
-('Taller Central', 'Av. Principal 123', 500),
+('Taller Central', 'Av. Principal 123', 5000),
 ('Sucursal Norte', 'Calle Secundaria 456', 300);
 
 INSERT INTO repuestos (idUbicacion, sku, cantidad, precio, categoria, disponible, nombre) VALUES

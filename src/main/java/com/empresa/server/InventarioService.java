@@ -1,3 +1,4 @@
+// src/main/java/com/empresa/server/InventarioService.java
 package com.empresa.server;
 
 import java.rmi.Remote;
@@ -5,6 +6,9 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface InventarioService extends Remote {
+    // Método de heartbeat para comprobar que el servidor está vivo
+    void heartbeat() throws RemoteException;
+
     List<Repuesto> verRepuestos() throws RemoteException;
     Repuesto consultarRepuesto(int sku) throws RemoteException;
     void agregarRepuesto(int idUbicacion, int sku, int cantidad, int precio, String categoria, boolean disponible, String nombre) throws RemoteException;
