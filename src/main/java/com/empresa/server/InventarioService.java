@@ -6,7 +6,6 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface InventarioService extends Remote {
-    // Método de heartbeat para comprobar que el servidor está vivo
     void heartbeat() throws RemoteException;
 
     List<Repuesto> verRepuestos() throws RemoteException;
@@ -25,5 +24,4 @@ public interface InventarioService extends Remote {
     Repuesto consultarRepuestoEnUbicacion(int idUbicacion, int sku) throws RemoteException;
 
     List<Ubicacion> verUbicaciones() throws RemoteException;
-    
 }

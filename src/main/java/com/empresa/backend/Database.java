@@ -152,14 +152,12 @@ public class Database {
     public static void insertarReserva(int idVehiculo, int sku, int cantidad) {
         String sql = "INSERT INTO reservas(idVehiculo, sku, cantidad, fecha) VALUES(?,?,?,NOW())";
         try (Connection c = getConnection()) {
-            
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.setInt(1, idVehiculo);
                 ps.setInt(2, sku);
                 ps.setInt(3, cantidad);
                 ps.executeUpdate();
             }
-            
             int idUbicacion;
             String selUb = "SELECT idUbicacion FROM repuestos WHERE sku = ?";
             try (PreparedStatement ps2 = c.prepareStatement(selUb)) {
@@ -169,7 +167,6 @@ public class Database {
                     idUbicacion = rs.getInt("idUbicacion");
                 }
             }
-          
             actualizarStock(idUbicacion, sku, -cantidad);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -178,7 +175,6 @@ public class Database {
 
     public static void eliminarReserva(int idReserva) {
         try (Connection c = getConnection()) {
-            
             String sel = "SELECT sku, cantidad FROM reservas WHERE idReserva = ?";
             int sku, cantidad;
             try (PreparedStatement ps = c.prepareStatement(sel)) {
@@ -189,8 +185,6 @@ public class Database {
                     cantidad = rs.getInt("cantidad");
                 }
             }
-
-           
             String selUb = "SELECT idUbicacion FROM repuestos WHERE sku = ?";
             int idUbicacion;
             try (PreparedStatement ps2 = c.prepareStatement(selUb)) {
@@ -200,11 +194,7 @@ public class Database {
                     idUbicacion = rs2.getInt("idUbicacion");
                 }
             }
-
-            
             actualizarStock(idUbicacion, sku, cantidad);
-
-           
             String del = "DELETE FROM reservas WHERE idReserva = ?";
             try (PreparedStatement ps3 = c.prepareStatement(del)) {
                 ps3.setInt(1, idReserva);
@@ -214,7 +204,6 @@ public class Database {
             e.printStackTrace();
         }
     }
-
 
     public static int obtenerStockTotalPorUbicacion(int idUbicacion) {
         String sql = "SELECT COALESCE(SUM(cantidad),0) AS total FROM repuestos WHERE idUbicacion = ?";

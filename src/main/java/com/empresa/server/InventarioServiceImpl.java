@@ -1,4 +1,3 @@
-// src/main/java/com/empresa/server/InventarioServiceImpl.java
 package com.empresa.server;
 
 import java.rmi.RemoteException;
@@ -24,13 +23,11 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
         this.restTemplate = new RestTemplate();
     }
 
-    // Interfaz funcional para operaciones con retorno
     @FunctionalInterface
     private interface OperationWithReturn<T> {
         T execute() throws RemoteException;
     }
 
-    // Interfaz funcional para operaciones sin retorno
     @FunctionalInterface
     private interface OperationWithoutReturn {
         void execute() throws RemoteException;
@@ -262,11 +259,8 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
     }
 
     public void heartbeat() throws RemoteException {
-        // Método de heartbeat para comprobar que el servidor está vivo
-        // No se requiere implementación específica, solo sirve para mantener la conexión activa
     }
 
-    // Clases internas para los request bodies
     private static class RepuestoRequest {
         public int idUbicacion;
         public int sku;

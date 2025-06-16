@@ -13,7 +13,6 @@ public class Vehiculo implements Serializable {
     private String cilindraje;
     private String color;
 
-
     public Vehiculo() {
     }
 

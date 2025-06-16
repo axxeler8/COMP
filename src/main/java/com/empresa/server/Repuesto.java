@@ -12,7 +12,6 @@ public class Repuesto implements Serializable {
     private String categoria;
     private boolean disponible;
 
-   
     public Repuesto() {
     }
 

@@ -10,7 +10,6 @@ public class Ubicacion implements Serializable {
     private String direccion;
     private int capacidad;
 
-   
     public Ubicacion() {
     }
 

@@ -10,7 +10,6 @@ public class Reserva implements Serializable {
     private int sku;
     private int cantidad;
 
-    
     public Reserva() {
     }
 

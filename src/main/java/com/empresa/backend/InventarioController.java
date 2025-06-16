@@ -7,8 +7,6 @@ import com.empresa.server.*;
 
 import java.util.List;
 
-
-
 @RestController
 @RequestMapping("/api/inventario")
 public class InventarioController {
@@ -25,7 +23,7 @@ public class InventarioController {
         }
         return ResponseEntity.ok(rep);
     }
-    // Repuestos
+    
     @GetMapping("/repuestos")
     public List<Repuesto> obtenerTodosRepuestos() {
         return Database.obtenerTodosRepuestos();
@@ -59,7 +57,6 @@ public class InventarioController {
         );
     }
 
-    // Reservas
     @GetMapping("/reservas")
     public List<Reserva> obtenerTodasReservas() {
         return Database.obtenerTodasReservas();
@@ -74,14 +71,11 @@ public class InventarioController {
         );
     }
 
-    // Ubicaciones
     @GetMapping("/ubicaciones/{id}/stock")
     public int consultarStockUbicacion(@PathVariable int id) {
         return Database.obtenerStockTotalPorUbicacion(id);
     }
-    // En com.empresa.backend.InventarioController
 
-    // Obtener los datos completos de una ubicación
     @GetMapping("/ubicaciones/{id}")
     public ResponseEntity<Ubicacion> obtenerUbicacionPorId(@PathVariable int id) {
         Ubicacion ub = Database.obtenerUbicacionPorId(id);
@@ -91,7 +85,6 @@ public class InventarioController {
         return ResponseEntity.ok(ub);
     }
 
-    // Vehículos
     @GetMapping("/vehiculos/{id}")
     public Vehiculo obtenerVehiculo(@PathVariable int id) {
         Vehiculo vehiculo = Database.obtenerVehiculoPorId(id);
@@ -108,7 +101,6 @@ public class InventarioController {
         return ResponseEntity.noContent().build();
     }
 
-    // Eliminar (liberar) reserva
     @DeleteMapping("/reservas/{idReserva}")
     public ResponseEntity<Void> eliminarReserva(@PathVariable int idReserva) {
         Database.eliminarReserva(idReserva);
@@ -124,7 +116,6 @@ public class InventarioController {
         private boolean disponible;
         private String nombre;
 
-        
         public int getIdUbicacion() { return idUbicacion; }
         public void setIdUbicacion(int idUbicacion) { this.idUbicacion = idUbicacion; }
 
@@ -152,7 +143,6 @@ public class InventarioController {
         private int sku;
         private int cantidad;
 
-        
         public int getIdVehiculo() { return idVehiculo; }
         public void setIdVehiculo(int idVehiculo) { this.idVehiculo = idVehiculo; }
 
@@ -163,7 +153,6 @@ public class InventarioController {
         public void setCantidad(int cantidad) { this.cantidad = cantidad; }
     }
 
-    
     @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "Recurso no encontrado")
     public static class ResourceNotFoundException extends RuntimeException {
         public ResourceNotFoundException(String message) {

@@ -123,21 +123,17 @@ public class ConsolaDespacho {
     }
 
     private void realizarDespacho(Scanner sc, RestTemplate rest) throws RemoteException {
-        // 1. Obtener ciudades de origen y destino
         List<CiudadDTO> ciudadesOrigen = getCiudades(rest, "listarCiudadesOrigen");
         List<CiudadDTO> ciudadesDestino = getCiudades(rest, "listarCiudadesDestino");
 
-        // 2. Elegir ciudad de origen
         System.out.println("Ciudades de ORIGEN disponibles:");
         mostrarCiudades(ciudadesOrigen);
         int codOrigen = leerCodigoCiudad(sc, ciudadesOrigen, "Código ciudad ORIGEN: ");
 
-        // 3. Elegir ciudad de destino
         System.out.println("Ciudades de DESTINO disponibles:");
         mostrarCiudades(ciudadesDestino);
         int codDestino = leerCodigoCiudad(sc, ciudadesDestino, "Código ciudad DESTINO: ");
 
-        // 4. Elegir caja
         System.out.println("Elige tipo de caja:");
         int i = 1;
         for (CajaTipo c : CajaTipo.values()) {
@@ -146,7 +142,6 @@ public class ConsolaDespacho {
         int cajaIdx = leerEntero(sc, "Opción: ", 1, CajaTipo.values().length) - 1;
         CajaTipo caja = CajaTipo.values()[cajaIdx];
 
-        // 5. SKU del repuesto
         Repuesto repuesto = null;
         while (repuesto == null) {
             int sku = leerEntero(sc, "SKU del repuesto: ");
@@ -154,7 +149,6 @@ public class ConsolaDespacho {
             if (repuesto == null) System.out.println("SKU no encontrado.");
         }
 
-        // 6. Peso del repuesto
         double peso;
         while (true) {
             System.out.print("Peso del repuesto (kg): ");
@@ -167,7 +161,6 @@ public class ConsolaDespacho {
             }
         }
 
-        // 7. Tipo de entrega
         String tipoEntrega;
         int tipoEntregaCodigo;
         while (true) {
@@ -178,7 +171,6 @@ public class ConsolaDespacho {
             System.out.println("Opción inválida.");
         }
 
-        // 8. Consultar tarifa real a la API de Starken
         TarifaRequest req = new TarifaRequest();
         req.codigoCiudadOrigen = codOrigen;
         req.codigoCiudadDestino = codDestino;
@@ -207,7 +199,6 @@ public class ConsolaDespacho {
             return;
         }
 
-        // Buscar la tarifa según el tipo de entrega elegido
         Optional<TarifaResponse.ListaTarifa> tarifaOpt = tarifaResp.listaTarifas.stream()
             .filter(t -> t.tipoEntrega.codigoTipoEntrega == tipoEntregaCodigo)
             .findFirst();
@@ -220,7 +211,6 @@ public class ConsolaDespacho {
         double costoEnvio = tarifaOpt.get().costoTotal;
         double precioFinal = costoEnvio + repuesto.getPrecio();
 
-        // 9. Mostrar resumen
         System.out.println("\n--- RESUMEN DE DESPACHO ---");
         System.out.printf("Caja: %s (%dx%dx%d cm)\n", caja.name(), caja.largo, caja.ancho, caja.alto);
         System.out.printf("Repuesto: %s (SKU %d)\n", repuesto.getNombre(), repuesto.getSku());
@@ -233,8 +223,6 @@ public class ConsolaDespacho {
         System.out.printf("PRECIO FINAL: $%.2f\n", precioFinal);
     }
 
-    // Métodos auxiliares
-
     enum CajaTipo {
         CHICA(20, 20, 20),
         MEDIANA(40, 30, 30),
@@ -244,7 +232,6 @@ public class ConsolaDespacho {
         CajaTipo(int l, int a, int h) { largo = l; ancho = a; alto = h; }
     }
 
-    // DTO para listarCiudadesOrigen
     public static class ListaCiudadesOrigenResponse {
         public String type;
         public int codigoRespuesta;
@@ -252,7 +239,6 @@ public class ConsolaDespacho {
         public java.util.List<CiudadDTO> listaCiudadesOrigen;
     }
 
-    // DTO para listarCiudadesDestino
     public static class ListaCiudadesDestinoResponse {
         public String type;
         public int codigoRespuesta;

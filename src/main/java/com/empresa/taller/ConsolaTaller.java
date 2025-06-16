@@ -123,7 +123,6 @@ public class ConsolaTaller {
                 }
             } catch (RemoteException e) {
                 System.err.println("Error en operación RMI: " + e.getMessage());
-                // Intentamos reconectar si viene de principal
                 if (connectedToPrimary) {
                     cambiarSvRespaldo();
                 }
@@ -157,8 +156,6 @@ public class ConsolaTaller {
             }
         }
     }
-
-    // Métodos invocando stub en lugar de svc
 
     private void mostrarRepuestos() throws RemoteException {
         List<Repuesto> list = stub.verRepuestos();
