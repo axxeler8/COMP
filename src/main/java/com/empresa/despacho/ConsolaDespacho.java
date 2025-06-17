@@ -10,9 +10,6 @@ import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
-
 public class ConsolaDespacho {
     private static InventarioService stub;
     private final String host = "localhost";
@@ -20,10 +17,6 @@ public class ConsolaDespacho {
     private final int backupPort  = 1100;
     private boolean connectedToPrimary = true;
     private volatile boolean running = true;
-
-    private static final String RUT_HEADER = "76211240";
-    private static final String CLAVE_HEADER = "key";
-    private static final String API_BASE = "https://restservices-qa.starken.cl/apiqa/starkenservices/rest/";
 
     public static void main(String[] args) {
         try {
@@ -100,8 +93,6 @@ public class ConsolaDespacho {
 
     private void atenderConsola() throws Exception {
         Scanner sc = new Scanner(System.in);
-        RestTemplate rest = new RestTemplate();
-
         while (true) {
             System.out.println("\n--- Consola Despacho ---");
             System.out.println("1) Realizar despacho");
@@ -110,7 +101,7 @@ public class ConsolaDespacho {
 
             try {
                 switch (op) {
-                    case 1: realizarDespacho(sc, rest); break;
+                    case 1: realizarDespacho(sc); break;
                     case 2: System.out.println("Saliendo..."); sc.close(); System.exit(0);
                 }
             } catch (RemoteException e) {
@@ -122,9 +113,9 @@ public class ConsolaDespacho {
         }
     }
 
-    private void realizarDespacho(Scanner sc, RestTemplate rest) throws RemoteException {
-        List<CiudadDTO> ciudadesOrigen = getCiudades(rest, "listarCiudadesOrigen");
-        List<CiudadDTO> ciudadesDestino = getCiudades(rest, "listarCiudadesDestino");
+    private void realizarDespacho(Scanner sc) throws RemoteException {
+        List<CiudadDTO> ciudadesOrigen = stub.listarCiudadesOrigen();
+        List<CiudadDTO> ciudadesDestino = stub.listarCiudadesDestino();
 
         System.out.println("Ciudades de ORIGEN disponibles:");
         mostrarCiudades(ciudadesOrigen);
@@ -179,27 +170,13 @@ public class ConsolaDespacho {
         req.largo = caja.largo;
         req.kilos = peso;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("rut", RUT_HEADER);
-        headers.set("clave", CLAVE_HEADER);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<TarifaRequest> entity = new HttpEntity<>(req, headers);
-
-        ResponseEntity<TarifaResponse> resp = rest.exchange(
-            API_BASE + "consultarTarifas",
-            HttpMethod.POST,
-            entity,
-            TarifaResponse.class
-        );
-
-        TarifaResponse tarifaResp = resp.getBody();
-        if (tarifaResp == null || tarifaResp.listaTarifas == null) {
-            System.out.println("No se pudo obtener tarifa.");
+        TarifaResponse resp = stub.consultarTarifas(req);
+        if (resp == null || resp.listaTarifas == null || resp.listaTarifas.isEmpty()) {
+            System.out.println("Respuesta API: " + (resp != null ? resp.mensajeRespuesta : "Sin respuesta del servidor"));
             return;
         }
 
-        Optional<TarifaResponse.ListaTarifa> tarifaOpt = tarifaResp.listaTarifas.stream()
+        Optional<TarifaResponse.ListaTarifa> tarifaOpt = resp.listaTarifas.stream()
             .filter(t -> t.tipoEntrega.codigoTipoEntrega == tipoEntregaCodigo)
             .findFirst();
 
@@ -227,52 +204,8 @@ public class ConsolaDespacho {
         CHICA(20, 20, 20),
         MEDIANA(40, 30, 30),
         GRANDE(60, 40, 40);
-
         public final int largo, ancho, alto;
         CajaTipo(int l, int a, int h) { largo = l; ancho = a; alto = h; }
-    }
-
-    public static class ListaCiudadesOrigenResponse {
-        public String type;
-        public int codigoRespuesta;
-        public String mensajeRespuesta;
-        public java.util.List<CiudadDTO> listaCiudadesOrigen;
-    }
-
-    public static class ListaCiudadesDestinoResponse {
-        public String type;
-        public int codigoRespuesta;
-        public String mensajeRespuesta;
-        public java.util.List<CiudadDTO> listaCiudadesDestino;
-    }
-
-    private static List<CiudadDTO> getCiudades(RestTemplate rest, String endpoint) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("rut", RUT_HEADER);
-        headers.set("clave", CLAVE_HEADER);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        if (endpoint.equals("listarCiudadesOrigen")) {
-            ResponseEntity<ListaCiudadesOrigenResponse> resp = rest.exchange(
-                API_BASE + endpoint,
-                HttpMethod.GET,
-                entity,
-                ListaCiudadesOrigenResponse.class
-            );
-            ListaCiudadesOrigenResponse body = resp.getBody();
-            return body != null ? body.listaCiudadesOrigen : Collections.emptyList();
-        } else if (endpoint.equals("listarCiudadesDestino")) {
-            ResponseEntity<ListaCiudadesDestinoResponse> resp = rest.exchange(
-                API_BASE + endpoint,
-                HttpMethod.GET,
-                entity,
-                ListaCiudadesDestinoResponse.class
-            );
-            ListaCiudadesDestinoResponse body = resp.getBody();
-            return body != null ? body.listaCiudadesDestino : Collections.emptyList();
-        } else {
-            return Collections.emptyList();
-        }
     }
 
     private static void mostrarCiudades(List<CiudadDTO> ciudades) {

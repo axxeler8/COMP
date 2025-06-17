@@ -1,9 +1,12 @@
-// src/main/java/com/empresa/server/InventarioService.java
 package com.empresa.server;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+
+import com.empresa.despacho.dto.CiudadDTO;
+import com.empresa.despacho.dto.TarifaRequest;
+import com.empresa.despacho.dto.TarifaResponse;
 
 public interface InventarioService extends Remote {
     void heartbeat() throws RemoteException;
@@ -24,4 +27,7 @@ public interface InventarioService extends Remote {
     Repuesto consultarRepuestoEnUbicacion(int idUbicacion, int sku) throws RemoteException;
 
     List<Ubicacion> verUbicaciones() throws RemoteException;
+    List<CiudadDTO> listarCiudadesOrigen() throws RemoteException;
+    List<CiudadDTO> listarCiudadesDestino() throws RemoteException;
+    TarifaResponse consultarTarifas(TarifaRequest req) throws RemoteException;
 }

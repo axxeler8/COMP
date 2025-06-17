@@ -1,6 +1,9 @@
 package com.empresa.despacho.dto;
 
-public class TarifaRequest {
+import java.io.Serializable;
+
+public class TarifaRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
     public int codigoCiudadOrigen;
     public int codigoCiudadDestino;
     public int codigoAgenciaDestino = 0;

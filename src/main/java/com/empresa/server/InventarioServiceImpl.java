@@ -3,6 +3,7 @@ package com.empresa.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -11,11 +12,19 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import com.empresa.despacho.dto.CiudadDTO;
+import com.empresa.despacho.dto.TarifaRequest;
+import com.empresa.despacho.dto.TarifaResponse;
 
 public class InventarioServiceImpl extends UnicastRemoteObject implements InventarioService {
 
-    private final RestTemplate restTemplate;
     private static final String BASE_URL = "http://localhost:8080/api/inventario";
+    private static final String STARKEN_API_BASE = "https://restservices-qa.starken.cl/apiqa/starkenservices/rest/";
+    private static final String RUT_HEADER = "76211240";
+    private static final String CLAVE_HEADER = "key";
+    private final RestTemplate restTemplate;
     private final Lock mutex = new ReentrantLock();
 
     public InventarioServiceImpl() throws RemoteException {
@@ -256,6 +265,103 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
                 throw new RemoteException("Error al consultar repuesto en ubicación: " + e.getMessage());
             }
         });
+    }
+
+    private List<CiudadDTO> getCiudades(String endpoint) throws RemoteException {
+        try {
+            String url = STARKEN_API_BASE + endpoint;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("rut", RUT_HEADER);
+            headers.set("clave", CLAVE_HEADER);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Map.class
+            );
+            Map<String, Object> body = response.getBody();
+            if (body == null) return List.of();
+            String key = endpoint.contains("Destino") ? "listaCiudadesDestino" : "listaCiudadesOrigen";
+            List<Map<String, Object>> lista = (List<Map<String, Object>>) body.get(key);
+            List<CiudadDTO> ciudades = new java.util.ArrayList<>();
+            if (lista != null) {
+                for (Map<String, Object> ciudadMap : lista) {
+                    CiudadDTO ciudad = new CiudadDTO();
+                    ciudad.codigoCiudad = (int) ciudadMap.getOrDefault("codigoCiudad", 0);
+                    ciudad.codigoRegion = (int) ciudadMap.getOrDefault("codigoRegion", 0);
+                    ciudad.codigoZonaGeografica = (int) ciudadMap.getOrDefault("codigoZonaGeografica", 0);
+                    ciudad.nombreCiudad = (String) ciudadMap.getOrDefault("nombreCiudad", "");
+                    ciudades.add(ciudad);
+                }
+            }
+            return ciudades;
+        } catch (Exception e) {
+            throw new RemoteException("Error obteniendo ciudades desde Starken", e);
+        }
+    }
+
+    @Override
+    public List<CiudadDTO> listarCiudadesOrigen() throws RemoteException {
+        return getCiudades("listarCiudadesOrigen");
+    }
+
+    @Override
+    public List<CiudadDTO> listarCiudadesDestino() throws RemoteException {
+        return getCiudades("listarCiudadesDestino");
+    }
+
+    @Override
+    public TarifaResponse consultarTarifas(TarifaRequest req) throws RemoteException {
+        try {
+            String url = STARKEN_API_BASE + "consultarTarifas";
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("rut", RUT_HEADER);
+            headers.set("clave", CLAVE_HEADER);
+            HttpEntity<TarifaRequest> entity = new HttpEntity<>(req, headers);
+            ResponseEntity<TarifaResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                TarifaResponse.class
+            );
+            TarifaResponse body = response.getBody();
+            if (body == null) {
+                TarifaResponse error = new TarifaResponse();
+                error.codigoRespuesta = -1;
+                error.mensajeRespuesta = "Respuesta vacía de la API";
+                error.listaTarifas = java.util.Collections.emptyList();
+                return error;
+            }
+            return body;
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
+            if (responseBody != null && !responseBody.isEmpty()) {
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    TarifaResponse error = mapper.readValue(responseBody, TarifaResponse.class);
+                    return error;
+                } catch (Exception ex) {
+                    TarifaResponse error = new TarifaResponse();
+                    error.codigoRespuesta = -1;
+                    error.mensajeRespuesta = "Error al parsear respuesta de error: " + responseBody;
+                    error.listaTarifas = java.util.Collections.emptyList();
+                    return error;
+                }
+            } else {
+                TarifaResponse error = new TarifaResponse();
+                error.codigoRespuesta = -1;
+                error.mensajeRespuesta = "Error HTTP: " + e.getStatusCode();
+                error.listaTarifas = java.util.Collections.emptyList();
+                return error;
+            }
+        } catch (Exception e) {
+            TarifaResponse error = new TarifaResponse();
+            error.codigoRespuesta = -1;
+            error.mensajeRespuesta = "Error inesperado: " + e.getMessage();
+            error.listaTarifas = java.util.Collections.emptyList();
+            return error;
+        }
     }
 
     public void heartbeat() throws RemoteException {

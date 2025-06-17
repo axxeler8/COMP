@@ -16,51 +16,38 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Web (REST Controller) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-
-        <!-- Spring Boot Data JPA (Database) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-
-        <!-- MySQL Connector -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- Jackson (JSON Serialization) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-
-        <!-- RMI (Java Native) -->
         <dependency>
             <groupId>javax.xml</groupId>
             <artifactId>jaxrpc-api</artifactId>
             <version>1.1</version>
         </dependency>
-
-        <!-- Lombok (Optional) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.28</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- JAXB (Java 11+ Compatibility) -->
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
@@ -76,7 +63,6 @@
 
     <build>
         <plugins>
-            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -90,13 +76,11 @@
                 </executions>
             </plugin>
 
-            <!-- Exec Maven Plugin (Para ejecutar diferentes módulos) -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <executions>
-                    <!-- Servidor Principal -->
                     <execution>
                         <id>run-main-server</id>
                         <goals><goal>java</goal></goals>
@@ -104,8 +88,6 @@
                             <mainClass>com.empresa.server.ServerMain</mainClass>
                         </configuration>
                     </execution>
-                    
-                    <!-- Servidor de Respaldo -->
                     <execution>
                         <id>run-backup-server</id>
                         <goals><goal>java</goal></goals>
@@ -113,8 +95,6 @@
                             <mainClass>com.empresa.server.ServerBackup</mainClass>
                         </configuration>
                     </execution>
-                    
-                    <!-- Cliente -->
                     <execution>
                         <id>run-taller</id>
                         <goals><goal>java</goal></goals>
@@ -139,7 +119,6 @@
                 </executions>
             </plugin>
 
-            <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
