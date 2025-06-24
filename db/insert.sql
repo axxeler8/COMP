@@ -8,10 +8,10 @@ INSERT INTO repuestos (idUbicacion, sku, cantidad, precio, categoria, disponible
 (2, 1003, 5, 120, 'Suspensión', '1', 'Amortiguadores Delanteros'),
 (2, 1004, 20, 10, 'Electricidad', '1', 'Bujías estándar');
 
-INSERT INTO vehiculos (anio, idUbicacion, nombre, modelo, cilindraje, color) VALUES
-(2020, 1, 'Toyota', 'Corolla', '1600cc', 'Blanco'),
-(2018, 1, 'Honda', 'Civic', '1800cc', 'Gris'),
-(2022, 2, 'Yamaha', 'MT-07', '700cc', 'Azul');
+INSERT INTO vehiculos (anio, idUbicacion, nombre, modelo, cilindraje) VALUES
+(2020, 1, 'Toyota', 'Corolla', '1600cc'),
+(2018, 1, 'Honda', 'Civic', '1800cc'),
+(2022, 2, 'Yamaha', 'MT-07', '700cc');
 
 INSERT INTO reservas (idVehiculo, sku, cantidad, fecha) VALUES
 (1, 1001, 2, '2025-05-15 10:00:00'),

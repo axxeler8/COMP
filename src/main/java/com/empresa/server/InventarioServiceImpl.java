@@ -51,8 +51,20 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
         }
     }
 
-    private void executeWithMutex(OperationWithoutReturn operation) throws RemoteException {
-        mutex.lock();
+    private boolean intentoObtenerMutex(String operacion) {
+        if (mutex.tryLock()) {
+            System.out.println("Tengo permiso para iniciar la sección crítica de " + operacion + ".");
+            return true;
+        } else {
+            System.out.println("Aún no tengo permiso para la sección crítica de " + operacion + ". Esperando...");
+            mutex.lock();
+            System.out.println("Ahora tengo permiso para iniciar la sección crítica de " + operacion + ".");
+            return true;
+        }
+    }
+
+    private void executeWithMutex(String operacion, OperationWithoutReturn operation) throws RemoteException {
+        intentoObtenerMutex(operacion);
         try {
             operation.execute();
         } finally {
@@ -111,8 +123,10 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
     @Override
     public void agregarRepuesto(int idUbicacion, int sku, int cantidad, 
                                 int precio, String categoria, boolean disponible, String nombre) throws RemoteException {
-        executeWithMutex(() -> {
+        executeWithMutex("inserción de repuesto", () -> {
             try {
+                System.out.println("Iniciando inserción, tiempo de inserción 5 segundos");
+                Thread.sleep(5000);
                 RepuestoRequest request = new RepuestoRequest();
                 request.idUbicacion = idUbicacion;
                 request.sku = sku;
@@ -122,6 +136,7 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
                 request.disponible = disponible;
                 request.nombre = nombre;
                 restTemplate.postForEntity(BASE_URL + "/repuestos", request, Void.class);
+                System.out.println("Repuesto agregado");
             } catch (Exception e) {
                 throw new RemoteException("Error al crear repuesto: " + e.getMessage());
             }
@@ -130,12 +145,15 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
 
     @Override
     public void liberarRepuesto(int idUbicacion, int sku, int cantidad) throws RemoteException {
-        executeWithMutex(() -> {
+        executeWithMutex("eliminación de repuesto", () -> {
             try {
+                System.out.println("Iniciando eliminación, tiempo de eliminación 5 segundos");
+                Thread.sleep(5000);
                 restTemplate.put(
                     BASE_URL + "/repuestos/" + idUbicacion + "/" + sku + "/liberar?cantidad=" + cantidad,
                     null
                 );
+                System.out.println("Repuesto liberado");
             } catch (Exception e) {
                 throw new RemoteException("Error al liberar stock: " + e.getMessage());
             }
@@ -176,7 +194,7 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
 
     @Override
     public void agregarReserva(int idVehiculo, int sku, int cantidad) throws RemoteException {
-        executeWithMutex(() -> {
+        executeWithMutex("agregar reserva", () -> {
             try {
                 ReservaRequest request = new ReservaRequest();
                 request.idVehiculo = idVehiculo;
@@ -191,7 +209,7 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
 
     @Override
     public void liberarReserva(int idReserva) throws RemoteException {
-        executeWithMutex(() -> {
+        executeWithMutex("liberar reserva", () -> {
             try {
                 restTemplate.delete(BASE_URL + "/reservas/" + idReserva);
             } catch (HttpClientErrorException.NotFound nf) {
@@ -300,7 +318,7 @@ public class InventarioServiceImpl extends UnicastRemoteObject implements Invent
             throw new RemoteException("Error obteniendo ciudades desde Starken", e);
         }
     }
-
+    
     @Override
     public List<CiudadDTO> listarCiudadesOrigen() throws RemoteException {
         return getCiudades("listarCiudadesOrigen");
